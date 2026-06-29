@@ -7,7 +7,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 # !!! REEMPLAZA ESTO CON TU TOKEN REAL DE BOTFATHER !!!
-TOKEN = "TU_TOKEN_DE_BOTFATHER"
+TOKEN = "7694591269:AAE59T0wJ_6l_lSD8XaWU29X1KeOPw4gDTE"
 
 def cargar_datos():
     poblaciones = []
