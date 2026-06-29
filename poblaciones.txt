@@ -269,3 +269,279 @@ Almoradí, Vega Baja
 Callosa de Segura, Vega Baja
 Guardamar del Segura, Vega Baja
 Pilar de la Horadada, Vega Baja
+Agost, Alacantí
+Agres, Comtat
+Aigües, Alacantí
+Alicante/Alacant, Alacantí
+Albatera, Vega Baja
+Alcalalí, Marina Alta
+Alcoi/Alcoy, Alcoià
+Alcoleja, Comtat
+Alcosser, Comtat
+Alfafara, Comtat
+Alfàs del Pi, Marina Baixa
+Algorfa, Vega Baja
+Algueña, Vinalopó Mitjà
+Almoradí, Vega Baja
+Almudaina, Comtat
+Alqueria d'Asnar, Comtat
+Altea, Marina Baixa
+Aspe, Vinalopó Mitjà
+Atzúbia, Marina Alta
+Balones, Comtat
+Banyeres de Mariola, Alcoià
+Benasau, Comtat
+Beneixama, Alt Vinalopó
+Benejúzar, Vega Baja
+Benferri, Vega Baja
+Beniarbeig, Marina Alta
+Beniardà, Marina Baixa
+Beniarrés, Comtat
+Benidoleig, Marina Alta
+Benidorm, Marina Baixa
+Benifallim, Alcoià
+Benifato, Marina Baixa
+Benigembla, Marina Alta
+Benijófar, Vega Baja
+Benilloba, Comtat
+Benillup, Comtat
+Benimantell, Marina Baixa
+Benimarfull, Comtat
+Benimassot, Comtat
+Benimeli, Marina Alta
+Benissa, Marina Alta
+Biar, Alt Vinalopó
+Bigastro, Vega Baja
+Bolulla, Marina Baixa
+Busot, Alacantí
+Callosa d'en Sarrià, Marina Baixa
+Callosa de Segura, Vega Baja
+Calp, Marina Alta
+Camp de Mirra, Alt Vinalopó
+Campello, Alacantí
+Cañada, Alt Vinalopó
+Castalla, Alcoià
+Castell de Castells, Marina Alta
+Castell de Guadalest, Marina Baixa
+Catral, Vega Baja
+Cocentaina, Comtat
+Confrides, Marina Baixa
+Cox, Vega Baja
+Crevillent, Baix Vinalopó
+Daya Nueva, Vega Baja
+Daya Vieja, Vega Baja
+Dénia, Marina Alta
+Dolores, Vega Baja
+Elda, Vinalopó Mitjà
+Elx/Elche, Baix Vinalopó
+Fageca, Comtat
+Famorca, Comtat
+Finestrat, Marina Baixa
+Fondó de les Neus/Hondón de las Nieves, Vinalopó Mitjà
+Formentera del Segura, Vega Baja
+Gaianes, Comtat
+Gata de Gorgos, Marina Alta
+Gorga, Comtat
+Granja de Rocamora, Vega Baja
+Guardamar del Segura, Vega Baja
+Hondón de los Frailes, Vinalopó Mitjà
+Ibi, Alcoià
+Jacarilla, Vega Baja
+Llíber, Marina Alta
+Millena, Comtat
+Monforte del Cid, Vinalopó Mitjà
+Monòver/Monóvar, Vinalopó Mitjà
+Los Montesinos, Vega Baja
+Murla, Marina Alta
+Muro de Alcoy, Comtat
+Mutxamel, Alacantí
+Novelda, Vinalopó Mitjà
+La Nucia, Marina Baixa
+Ondara, Marina Alta
+Onil, Alcoià
+Orba, Marina Alta
+Orihuela, Vega Baja
+Orxa/Lorcha, Comtat
+Orxeta, Marina Baixa
+Parcent, Marina Alta
+Pedreguer, Marina Alta
+Pego, Marina Alta
+Penàguila, Alcoià
+Petrer, Vinalopó Mitjà
+Pilar de la Horadada, Vega Baja
+Pinós/Pinoso, Vinalopó Mitjà
+Planes, Comtat
+Poble Nou de Benitatxell/Benitachell, Marina Alta
+Els Poblets, Marina Alta
+Polop, Marina Baixa
+Quatretondeta, Comtat
+Rafal, Vega Baja
+Ràfol d'Almúnia, Marina Alta
+Redován, Vega Baja
+Relleu, Marina Baixa
+Rojales, Vega Baja
+La Romana, Vinalopó Mitjà
+Sagra, Marina Alta
+Salinas, Alt Vinalopó
+San Fulgencio, Vega Baja
+San Isidro, Vega Baja
+San Miguel de Salinas, Vega Baja
+Sanet y Negrals, Marina Alta
+Sant Joan d'Alacant, Alacantí
+Sant Vicent del Raspeig/San Vicente, Alacantí
+Santa Pola, Baix Vinalopó
+Sax, Alt Vinalopó
+Sella, Marina Baixa
+Senija, Marina Alta
+Tàrbena, Marina Baixa
+Teulada, Marina Alta
+Tibi, Alacantí
+Tollos, Comtat
+Tormos, Marina Alta
+Torre de les Maçanes/Torremanzanas, Alacantí
+Torrevieja, Vega Baja
+Vall d'Alcalà, Marina Alta
+Vall d'Ebo, Marina Alta
+Vall de Gallinera, Marina Alta
+Vall de Laguar, Marina Alta
+El Verger, Marina Alta
+La Vila Joiosa/Villajoyosa, Marina Baixa
+Villena, Alt Vinalopó
+Xàbia/Jávea, Marina Alta
+Xaló, Marina Alta
+Xixona/Jijona, Alacantí
+Aín, Plana Baixa
+Albocàsser, Alt Maestrat
+Alcalà de Xivert, Baix Maestrat
+L'Alcora, Alcalatén
+Alcudia de Veo, Sierra de Espadán
+Alfondeguilla, Plana Baixa
+Algimia de Almonacid, Alto Palancia
+Almassora, Plana Alta
+Almedíjar, Alto Palancia
+Almenara, Plana Baixa
+Les Alqueries/Alquerías del Niño Perdido, Plana Baixa
+Altura, Alto Palancia
+Arañuel, Alto Mijares
+Ares del Maestrat, Alt Maestrat
+Argelita, Alto Mijares
+Artana, Plana Baixa
+Atzeneta del Maestrat, Alcalatén
+Ayódar, Alto Mijares
+Azuébar, Alto Palancia
+Barracas, Alto Palancia
+Bejís, Alto Palancia
+Benafer, Alto Palancia
+Benafigos, Alcalatén
+Benassal, Alt Maestrat
+Benicarló, Baix Maestrat
+Benicàssim/Benicasim, Plana Alta
+Benlloc, Plana Alta
+Betxí, Plana Baixa
+Borriana/Burriana, Plana Baixa
+Borriol, Plana Alta
+Cabanes, Plana Alta
+Càlig, Baix Maestrat
+Canet lo Roig, Baix Maestrat
+Castell de Cabres, Ports
+Castellfort, Ports
+Castellnovo, Alto Palancia
+Castelló de la Plana/Castellón de la Plana, Plana Alta
+Castillo de Villamalefa, Alto Mijares
+Catí, Alt Maestrat
+Caudiel, Alto Palancia
+Cervera del Maestre, Baix Maestrat
+Chilches/Xilxes, Plana Baixa
+Chóvar, Alto Palancia
+Cinctorres, Ports
+Cirat, Alto Mijares
+Cortes de Arenoso, Alto Mijares
+Costur, Alcalatén
+Les Coves de Vinromà, Plana Alta
+Culla, Alt Maestrat
+Eslida, Sierra de Espadán
+Espadilla, Alto Mijares
+Fanzara, Alto Mijares
+Figueroles, Alcalatén
+Forcall, Ports
+Fuente la Reina, Alto Palancia
+Fuentes de Ayódar, Alto Mijares
+Gaibiel, Alto Palancia
+Geldo, Alto Palancia
+Herbers, Ports
+Higueras, Alto Palancia
+La Jana, Baix Maestrat
+Jérica, Alto Palancia
+La Llosa, Plana Baixa
+Llucena/Lucena del Cid, Alcalatén
+Ludiente, Alto Mijares
+La Mata de Morella, Ports
+Matet, Alto Palancia
+Moncofa, Plana Baixa
+Montán, Alto Mijares
+Montanejos, Alto Mijares
+Morella, Ports
+Navajas, Alto Palancia
+Nules, Plana Baixa
+Olocau del Rey, Ports
+Onda, Plana Baixa
+Orpesa/Oropesa del Mar, Plana Alta
+Palanques, Ports
+Pavías, Alto Palancia
+Peníscola/Peñíscola, Baix Maestrat
+Pina de Montalgrao, Alto Palancia
+La Pobla de Benifassà, Ports
+La Pobla Tornesa, Plana Alta
+Portell de Morella, Ports
+Puebla de Arenoso, Alto Mijares
+Ribesalbes, Plana Baixa
+Rossell, Baix Maestrat
+Sacañet, Alto Palancia
+La Salzadella, Baix Maestrat
+San Rafael del Río, Baix Maestrat
+Sant Joan de Moró, Plana Alta
+Sant Jordi/San Jorge, Baix Maestrat
+Sant Mateu, Baix Maestrat
+Santa Magdalena de Pulpis, Baix Maestrat
+Segorbe, Alto Palancia
+La Serratella, Plana Alta
+Sierra Engarcerán, Plana Alta
+Soneja, Alto Palancia
+Sot de Ferrer, Alto Palancia
+Suera/Sueras, Sierra de Espadán
+Tales, Sierra de Espadán
+Teresa, Alto Palancia
+Tírig, Alt Maestrat
+Todolella, Ports
+Toga, Alto Mijares
+Torás, Alto Palancia
+El Toro, Alto Palancia
+Torralba del Pinar, Alto Mijares
+La Torre d'en Besora, Alt Maestrat
+La Torre d'en Doménec, Plana Alta
+Torreblanca, Plana Alta
+Torrechiva, Alto Mijares
+Traiguera, Baix Maestrat
+Les Useres/Useras, Alcalatén
+Vall d'Alba, Plana Alta
+La Vall d'Uixó, Plana Baixa
+Vall de Almonacid, Alto Palancia
+Vallat, Alto Mijares
+Vallibona, Ports
+Vila-real, Plana Baixa
+Vilafamés, Plana Alta
+Vilafranca/Villafranca del Cid, Ports
+Vilanova d'Alcolea, Plana Alta
+Vilar de Canes, Alt Maestrat
+La Vilavella, Plana Baixa
+Villahermosa del Río, Alto Mijares
+Villamalur, Sierra de Espadán
+Villanueva de Viver, Alto Mijares
+Villores, Ports
+Vinaròs, Baix Maestrat
+Vistabella del Maestrat, Alcalatén
+Viver, Alto Palancia
+Xert, Baix Maestrat
+Xodos/Chodos, Alcalatén
+Zorita del Maestrazgo, Ports
+Zucaina, Alto Mijares
