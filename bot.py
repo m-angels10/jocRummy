@@ -1,91 +1,105 @@
-import random
 import os
+import random
+import logging
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 
-def carregar_dades(ruta_fitxer):
+# Configuració de logs per a veure errors si cal
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+
+TOKEN = os.environ.get("TOKEN_TELEGRAM")
+
+def carregar_dades():
     poblacions = []
     comarques_set = set()
     
-    if not os.path.exists(ruta_fitxer):
-        print(f"Error: No s'ha trobat el fitxer '{ruta_fitxer}'.")
-        print("Assegura't de guardar el llistat en el mateix lloc amb el nom correcte.")
-        return None, None
-
-    with open(ruta_fitxer, 'r', encoding='utf-8') as f:
+    # Llegim el fitxer de poblacions (poblacio, comarca)
+    with open('poblacions.txt', 'r', encoding='utf-8') as f:
         for linia in f:
             linia = linia.strip()
             if not linia or ',' not in linia:
                 continue
-            # Separem per la coma i netegem espais
-            poblacio, comarca = linia.split(',', 1)
-            poblacio = poblacio.strip()
-            comarca = comarca.strip()
-            
-            poblacions.append((poblacio, comarca))
-            comarques_set.add(comarca)
+            pob, com = linia.split(',', 1)
+            poblacions.append((pob.strip(), com.strip()))
+            comarques_set.add(com.strip())
             
     return poblacions, list(comarques_set)
 
-def jugar():
-    fitxer_dades = "poblacions.txt"
-    poblacions, totes_comarques = carregar_dades(fitxer_dades)
+# Carreguem les dades a l'inici
+POBLACIONS, COMARQUES = carregar_dades()
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Comanda inicial /start"""
+    await update.message.reply_text(
+        "👋 Benvingut/da al Joc de les Comarques Valencianes!\n"
+        "Escriu /jugar per a començar una partida."
+    )
+
+async def enviar_pregunta(update: Update, context: ContextTypes.DEFAULT_TYPE, message_obj):
+    """Genera una pregunta aleatòria i envia els botons"""
+    # Triem una població a l'atzar
+    poblacio, comarca_correcta = random.choice(POBLACIONS)
     
-    if not poblacions:
-        return
-
-    puntuacio = 0
-    fetes = 0
+    # Generem 3 respostes incorrectes falses
+    altres_comarques = [c for c in COMARQUES if c != comarca_correcta]
+    opcions_falses = random.sample(altres_comarques, 3)
     
-    print("=========================================")
-    print("      BENVINGUT AL JOC DE LES COMARQUES  ")
-    print("=========================================\n")
-    print(f"S'han carregat {len(poblacions)} poblacions correctament.\n")
-    print("Escriu 'eixir' en qualsevol moment per a acabar.\n")
-
-    # Barregem les preguntes per a que no siguen sempre iguals
-    random.shuffle(poblacions)
-
-    for poblacio, comarca_correcta in poblacions:
-        print(f"Pregunta {fetes + 1}: De quina comarca és '{poblacio}'?")
+    # Juntem i barregem les 4 opcions
+    opcions = opcions_falses + [comarca_correcta]
+    random.shuffle(opcions)
+    
+    # Creem els botons interactius (InlineKeyboard)
+    # Guardem en 'callback_data' si és la correcta (C) o incorrecta (I) i el nom de la correcta
+    keyboard = []
+    for opcio in opcions:
+        es_correcta = "C" if opcio == comarca_correcta else "I"
+        # callback_data màxim 64 bytes: codifiquem tipus i la resposta correcta per a comprovar desprès
+        keyboard.append([InlineKeyboardButton(opcio, callback_data=f"{es_correcta}|{comarca_correcta}")])
         
-        # Generem 3 respostes incorrectes falses
-        altres_comarques = [c for c in totes_comarques if c != comarca_correcta]
-        if len(altres_comarques) < 3:
-            print("Error: Calen almenys 4 comarques diferents al fitxer de text.")
-            break
-            
-        opcions_falses = random.sample(altres_comarques, 3)
-        
-        # Juntem la correcta amb les falses i les barregem
-        opcions = opcions_falses + [comarca_correcta]
-        random.shuffle(opcions)
-        
-        # Mostrem les opcions a l'usuari
-        for i, opcio in enumerate(opcions, 1):
-            print(f"  {i}. {opcio}")
-            
-        # Validació de la resposta de l'usuari
-        while True:
-            resposta = input("\nTria una opció (1-4): ").strip()
-            
-            if resposta.lower() == 'eixir':
-                print(f"\nJoc acabat! Puntuació final: {puntuacio}/{fetes}")
-                return
-                
-            if resposta in ['1', '2', '3', '4']:
-                index_triat = int(resposta) - 1
-                if opcions[index_triat] == comarca_correcta:
-                    print("¡CORRECTE! 🌟\n")
-                    puntuacio += 1
-                else:
-                    print(f"INCORRECTE... ❌ La resposta correcta era: {comarca_correcta}\n")
-                fetes += 1
-                break
-            else:
-                print("Per favor, introduïx un número de l'1 al 4 o 'eixir'.")
-        
-        print("-" * 40)
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    text_pregunta = f"❓ **De quina comarca és la població de:**\n👉 *{poblacio}*?"
+    
+    if update.message:
+        await update.message.reply_text(text_pregunta, reply_markup=reply_markup, parse_mode="Markdown")
+    else:
+        await message_obj.reply_text(text_pregunta, reply_markup=reply_markup, parse_mode="Markdown")
 
-    print(f"Has completat totes les preguntes! Puntuació final: {puntuacio}/{fetes}")
+async def jugar(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Comanda /jugar"""
+    await enviar_pregunta(update, context, update.message)
 
-if __name__ == "__main__":
-    jugar()
+async def responder(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Gestiona el clic de l'usuari en els botons"""
+    query = update.callback_query
+    await query.answer()
+    
+    # Recuperem les dades del botó
+    dades = query.data.split('|')
+    es_correcta = dades[0]
+    comarca_correcta = dades[1]
+    
+    # Modifiquem el missatge original per a mostrar el resultat i traure els botons
+    if es_correcta == "C":
+        text_resultat = f"{query.message.text}\n\n🌟 **CORRECTE!** Enhorabona. 🎉"
+    else:
+        text_resultat = f"{query.message.text}\n\n❌ **INCORRECTE...** La resposta correcta era **{comarca_correcta}**."
+        
+    await query.edit_message_text(text=text_resultat, parse_mode="Markdown")
+    
+    # Envia automàticament la següent pregunta
+    await enviar_pregunta(update, context, query.message)
+
+def main():
+    # Creem l'aplicació del bot amb el Token de l'entorn
+    application = Application.builder().token(TOKEN).build()
+
+    # Handlers
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("jugar", jugar))
+    application.add_handler(CallbackQueryHandler(responder))
+
+    # El bot es queda escoltant contínuament (ideal per a un bot interactiu)
+    application.run_polling()
+
+if __name__ == '__main__':
+    main()
