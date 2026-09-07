@@ -303,7 +303,7 @@
 
             txtApertura.textContent = haAbierto 
                 ? "Apertura inicial completada" 
-                : "Apertura inicial: Necesitas min. 30 puntos";
+                : "Apertura inicial: Necesitas min. 30 puntos de tu mano";
 
             if (esMiTurno) {
                 txt.textContent = "TU TURNO";
@@ -392,10 +392,6 @@
             return mismoColor && esConsecutivo;
         }
 
-        function calcularPuntos(grupo) {
-            return grupo.reduce((suma, ficha) => suma + ficha.numero, 0);
-        }
-
         function crearNuevoGrupo() {
             if (!esMiTurno || seleccionadas.length === 0) return;
 
@@ -424,6 +420,7 @@
 
             tableroGrupos = tableroGrupos.filter(g => g.length > 0);
 
+            // 1. Validar que todas las combinaciones en la mesa sean válidas
             const todosValidos = tableroGrupos.every(g => esGrupoValido(g));
 
             if (!todosValidos) {
@@ -431,19 +428,29 @@
                 return;
             }
 
+            // 2. Control de Apertura Inicial (mínimo 30 puntos de tu mano)
             if (!haAbierto) {
+                // Identificar qué fichas de tu mano inicial acabaron en el tablero
+                const idsManoInicial = copiaManoInicioTurno.map(f => f.id);
                 const fichasEnMesa = tableroGrupos.flat();
-                const fichasNuevasDesdeMano = fichasEnMesa.filter(f => !copiaManoInicioTurno.some(m => m.id === f.id));
-                const puntosApertura = calcularPuntos(fichasNuevasDesdeMano);
+                const fichasBajadasDeLaMano = fichasEnMesa.filter(f => idsManoInicial.includes(f.id));
 
-                if (puntosApertura < 30 || fichasNuevasDesdeMano.length === 0) {
-                    mensaje.textContent = `Para la apertura inicial debes bajar fichas de tu mano que sumen al menos 30 puntos (Suma actual: ${puntosApertura} pts).`;
+                const puntosApertura = fichasBajadasDeLaMano.reduce((suma, f) => suma + f.numero, 0);
+
+                if (fichasBajadasDeLaMano.length === 0) {
+                    mensaje.textContent = "Debes bajar fichas de tu mano para jugar.";
+                    return;
+                }
+
+                if (puntosApertura < 30) {
+                    mensaje.textContent = `Para abrir necesitas sumar al menos 30 puntos con las fichas de tu mano (Suma actual: ${puntosApertura} pts).`;
                     return;
                 } else {
                     haAbierto = true;
                 }
             }
 
+            // 3. Comprobar Victoria
             const victoria = mano.length === 0;
 
             if (victoria) {
