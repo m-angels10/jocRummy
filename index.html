@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Rummy Online 2 Jugadores</title>
+    <!-- Librería para la conexión online fácil (PeerJS) -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            padding: 10px;
+            background-color: #1e3d2f;
+            color: white;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            user-select: none;
+        }
+
+        h1 { margin: 5px 0; font-size: 1.4rem; }
+
+        /* Panel de Conexión Online */
+        #panel-conexion {
+            background: #14281f;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #3a6b52;
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        input {
+            padding: 8px;
+            font-size: 1rem;
+            border-radius: 4px;
+            border: none;
+            width: 140px;
+            text-align: center;
+        }
+
+        /* Tablero de juego */
+        #tablero {
+            width: 100%;
+            max-width: 600px;
+            height: 220px;
+            background-color: #14281f;
+            border: 2px solid #3a6b52;
+            border-radius: 8px;
+            padding: 10px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+
+        .grupo-jugada {
+            display: inline-flex;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 5px;
+            border-radius: 6px;
+            margin: 5px;
+        }
+
+        /* Soporte del jugador */
+        #soporte {
+            width: 100%;
+            max-width: 600px;
+            min-height: 110px;
+            background-color: #3e2723;
+            border: 3px solid #5d4037;
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .ficha {
+            width: 38px;
+            height: 52px;
+            background-color: #fff8e7;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            box-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+            cursor: pointer;
+            border: 2px solid #ccc;
+        }
+
+        .rojo { color: #d32f2f; }
+        .azul { color: #1976d2; }
+        .negro { color: #212121; }
+        .amarillo { color: #fbc02d; }
+
+        .ficha.seleccionada {
+            border-color: #00e676;
+            transform: translateY(-5px);
+        }
+
+        .controles {
+            margin: 10px 0;
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 5px;
+            background-color: #4caf50;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:disabled { background-color: #555; }
+        button.rob { background-color: #ff9800; }
+        #mensaje { color: #ffeb3b; min-height: 20px; font-weight: bold; margin-bottom: 5px; text-align: center; }
+        #turno-info { font-weight: bold; font-size: 1.1rem; margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+
+    <h1>Rummy Online 2P</h1>
+
+    <!-- Conexión -->
+    <div id="panel-conexion">
+        <div>Tu ID de Sala: <b id="mi-id">Generando...</b></div>
+        <div style="margin-top: 8px;">
+            <input type="text" id="id-destino" placeholder="ID del rival">
+            <button onclick="conectarRival()">Unirse a Sala</button>
+        </div>
+    </div>
+
+    <div id="turno-info">Esperando rival...</div>
+    <div id="mensaje"></div>
+
+    <div id="tablero"></div>
+
+    <div class="controles">
+        <button id="btn-bajar" onclick="bajarJugada()" disabled>Bajar Combinación</button>
+        <button id="btn-robar" class="rob" onclick="robarFicha()" disabled>Robar y Pasar</button>
+    </div>
+
+    <div id="soporte"></div>
+
+    <script>
+        const colores = ['rojo', 'azul', 'negro', 'amarillo'];
+        let mazo = [], mano = [], seleccionadas = [];
+        let tableroGrupos = []; 
+        let peer, conn;
+        let esMiTurno = false;
+        let soyHost = false;
+
+        // --- CONEXIÓN ONLINE (PeerJS) ---
+        function iniciarPeer() {
+            // Genera un ID corto aleatorio de 4 dígitos para compartir fácil
+            const idCorto = Math.floor(1000 + Math.random() * 9000).toString();
+            peer = new Peer(idCorto);
+
+            peer.on('open', id => {
+                document.getElementById('mi-id').textContent = id;
+            });
+
+            // Escuchar cuando el Jugador 2 se conecta
+            peer.on('connection', c => {
+                conn = c;
+                soyHost = true;
+                esMiTurno = true;
+                configurarConexion();
+                iniciarPartidaHost();
+            });
+        }
+
+        function conectarRival() {
+            const idRival = document.getElementById('id-destino').value;
+            if (!idRival) return alert("Introduce el ID del rival");
+            conn = peer.connect(idRival);
+            soyHost = false;
+            esMiTurno = false;
+            configurarConexion();
+        }
+
+        function configurarConexion() {
+            document.getElementById('panel-conexion').style.display = 'none';
+            document.getElementById('mensaje').textContent = "¡Conectado con éxito!";
+
+            conn.on('data', data => {
+                procesarDatos(data);
+            });
+        }
+
+        // --- LÓGICA DEL JUEGO ---
+        function crearMazo() {
+            mazo = [];
+            for (let i = 0; i < 2; i++) {
+                colores.forEach(color => {
+                    for (let num = 1; num <= 13; num++) {
+                        mazo.push({ numero: num, color: color, id: Math.random() });
+                    }
+                });
+            }
+            mazo.sort(() => Math.random() - 0.5);
+        }
+
+        function iniciarPartidaHost() {
+            crearMazo();
+            mano = mazo.splice(0, 14);
+            const manoRival = mazo.splice(0, 14);
+
+            // Enviar la mano inicial al Jugador 2
+            conn.send({ tipo: 'INICIO', manoRival: manoRival });
+            
+            actualizarInterfazTurno();
+            renderizarMano();
+        }
+
+        function procesarDatos(data) {
+            if (data.tipo === 'INICIO') {
+                mano = data.manoRival;
+                renderizarMano();
+                actualizarInterfazTurno();
+            } else if (data.tipo === 'ACCION') {
+                tableroGrupos = data.tablero;
+                mazo = data.mazo;
+                esMiTurno = true;
+                renderizarTablero();
+                actualizarInterfazTurno();
+            }
+        }
+
+        function pasarTurno() {
+            esMiTurno = false;
+            actualizarInterfazTurno();
+            conn.send({
+                tipo: 'ACCION',
+                tablero: tableroGrupos,
+                mazo: mazo
+            });
+        }
+
+        function actualizarInterfazTurno() {
+            const txt = document.getElementById('turno-info');
+            const btnBajar = document.getElementById('btn-bajar');
+            const btnRobar = document.getElementById('btn-robar');
+
+            if (esMiTurno) {
+                txt.textContent = "TU TURNO";
+                txt.style.color = "#4caf50";
+                btnBajar.disabled = false;
+                btnRobar.disabled = false;
+            } else {
+                txt.textContent = "Turno del Rival...";
+                txt.style.color = "#ff9800";
+                btnBajar.disabled = true;
+                btnRobar.disabled = true;
+            }
+        }
+
+        function renderizarMano() {
+            const soporte = document.getElementById('soporte');
+            soporte.innerHTML = '';
+            mano.sort((a, b) => a.numero - b.numero);
+            
+            mano.forEach(ficha => {
+                const div = document.createElement('div');
+                div.className = `ficha ${ficha.color}`;
+                if (seleccionadas.includes(ficha)) div.classList.add('seleccionada');
+                div.textContent = ficha.numero;
+                
+                div.onclick = () => {
+                    if (!esMiTurno) return;
+                    const idx = seleccionadas.indexOf(ficha);
+                    if (idx > -1) seleccionadas.splice(idx, 1);
+                    else seleccionadas.push(ficha);
+                    renderizarMano();
+                };
+                soporte.appendChild(div);
+            });
+        }
+
+        function renderizarTablero() {
+            const tablero = document.getElementById('tablero');
+            tablero.innerHTML = '';
+            tableroGrupos.forEach(grupo => {
+                const contenedor = document.createElement('div');
+                contenedor.className = 'grupo-jugada';
+                grupo.forEach(ficha => {
+                    const div = document.createElement('div');
+                    div.className = `ficha ${ficha.color}`;
+                    div.textContent = ficha.numero;
+                    contenedor.appendChild(div);
+                });
+                tablero.appendChild(contenedor);
+            });
+        }
+
+        function esJugadaValida(grupo) {
+            if (grupo.length < 3) return false;
+            const f = [...grupo].sort((a, b) => a.numero - b.numero);
+
+            const mismoNumero = f.every(item => item.numero === f[0].numero);
+            const coloresUnicos = new Set(f.map(item => item.color)).size === f.length;
+            if (mismoNumero && coloresUnicos) return true;
+
+            const mismoColor = f.every(item => item.color === f[0].color);
+            let esConsecutivo = true;
+            for (let i = 0; i < f.length - 1; i++) {
+                if (f[i + 1].numero !== f[i].numero + 1) {
+                    esConsecutivo = false;
+                    break;
+                }
+            }
+            return mismoColor && esConsecutivo;
+        }
+
+        function bajarJugada() {
+            if (!esMiTurno) return;
+            if (esJugadaValida(seleccionadas)) {
+                seleccionadas.sort((a, b) => a.numero - b.numero);
+                tableroGrupos.push([...seleccionadas]);
+
+                // Retirar fichas jugadas de la mano
+                mano = mano.filter(f => !seleccionadas.includes(f));
+                seleccionadas = [];
+
+                renderizarTablero();
+                renderizarMano();
+
+                if (mano.length === 0) {
+                    alert("¡HAS GANADO LA PARTIDA!");
+                }
+            } else {
+                document.getElementById('mensaje').textContent = "Combinación no válida";
+            }
+        }
+
+        function robarFicha() {
+            if (!esMiTurno) return;
+            if (mazo.length > 0) {
+                mano.push(mazo.pop());
+            }
+            seleccionadas = [];
+            renderizarMano();
+            pasarTurno();
+        }
+
+        // Iniciar red al cargar la página
+        iniciarPeer();
+    </script>
+</body>
+</html>
