@@ -45,13 +45,18 @@
         #tablero {
             width: 100%;
             max-width: 600px;
-            height: 220px;
+            min-height: 220px;
+            max-height: 300px;
             background-color: #14281f;
             border: 2px solid #3a6b52;
             border-radius: 8px;
             padding: 10px;
             overflow-y: auto;
             margin-bottom: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            gap: 10px;
         }
 
         .grupo-jugada {
@@ -59,7 +64,8 @@
             background: rgba(255, 255, 255, 0.1);
             padding: 5px;
             border-radius: 6px;
-            margin: 5px;
+            gap: 4px;
+            border: 1px dashed rgba(255, 255, 255, 0.2);
         }
 
         #soporte {
@@ -98,17 +104,20 @@
         .ficha.seleccionada {
             border-color: #00e676;
             transform: translateY(-5px);
+            box-shadow: 0 0 8px #00e676;
         }
 
         .controles {
             margin: 10px 0;
             display: flex;
-            gap: 10px;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
         button {
             padding: 8px 12px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: bold;
             border: none;
             border-radius: 5px;
@@ -120,6 +129,8 @@
         button:disabled { background-color: #555; cursor: not-allowed; }
         button.rob { background-color: #ff9800; }
         button.pasar { background-color: #2196F3; }
+        button.reset { background-color: #e53935; }
+
         #mensaje { color: #ffeb3b; min-height: 20px; font-weight: bold; margin-bottom: 5px; text-align: center; }
         #turno-info { font-weight: bold; font-size: 1.1rem; margin-bottom: 5px; }
         #estado-apertura { font-size: 0.85rem; color: #b2dfdb; margin-bottom: 5px; }
@@ -138,15 +149,16 @@
     </div>
 
     <div id="turno-info">Esperando rival...</div>
-    <div id="estado-apertura">Apertura inicial: Necesitas 30 puntos para empezar</div>
+    <div id="estado-apertura">Apertura inicial: Necesitas min. 30 puntos</div>
     <div id="mensaje"></div>
 
     <div id="tablero"></div>
 
     <div class="controles">
-        <button id="btn-bajar" onclick="bajarJugada()" disabled>Bajar Combinación</button>
-        <button id="btn-robar" class="rob" onclick="robarFicha()" disabled>Robar</button>
-        <button id="btn-pasar" class="pasar" onclick="pasarTurnoManualmente()" disabled>Pasar Turno</button>
+        <button id="btn-crear-grupo" onclick="crearNuevoGrupo()" disabled>Crear Grupo de Fichas</button>
+        <button id="btn-robar" class="rob" onclick="robarFicha()" disabled>Robar y Pasar</button>
+        <button id="btn-pasar" class="pasar" onclick="finalizarTurno()" disabled>Finalizar Turno</button>
+        <button id="btn-reset" class="reset" onclick="deshacerMovimientos()" disabled>Deshacer Movimientos</button>
     </div>
 
     <div id="soporte"></div>
@@ -158,10 +170,13 @@
         let peer, conn;
         let esMiTurno = false;
         let soyHost = false;
+
+        // Copias de respaldo para deshacer cambios si el movimiento es inválido
+        let copiaTableroInicioTurno = [];
+        let copiaManoInicioTurno = [];
         
-        // Control de reglas
-        let haAbierto = false;      // Indica si el jugador local ya hizo su apertura de 30 puntos
-        let haJugadoEnTurno = false; // Indica si ya bajó jugada o robó en este turno
+        let haAbierto = false;      
+        let haBajadoEnEsteTurno = false;
 
         function iniciarPeer() {
             const idCorto = Math.floor(1000 + Math.random() * 9000).toString();
@@ -218,9 +233,10 @@
 
         function iniciarPartidaHost() {
             crearMazo();
-            
             mano = mazo.splice(0, 14);
             const manoRival = mazo.splice(0, 14);
+
+            guardarEstadoTurno();
 
             setTimeout(() => {
                 renderizarMano();
@@ -237,6 +253,7 @@
             if (data.tipo === 'INICIO') {
                 mano = data.manoRival;
                 seleccionadas = [];
+                guardarEstadoTurno();
                 setTimeout(() => {
                     renderizarMano();
                     actualizarInterfazTurno();
@@ -245,33 +262,45 @@
                 tableroGrupos = data.tablero;
                 mazo = data.mazo;
                 esMiTurno = true;
-                haJugadoEnTurno = false; // Nuevo turno, se reinicia la bandera
+                haBajadoEnEsteTurno = false;
+                
+                if (data.victoriaRival) {
+                    alert("¡EL RIVAL HA JUGADO SU ÚLTIMA FICHA Y HA GANADO!");
+                    esMiTurno = false;
+                }
+
+                guardarEstadoTurno();
                 document.getElementById('mensaje').textContent = "";
                 renderizarTablero();
+                renderizarMano();
                 actualizarInterfazTurno();
             }
         }
 
-        function pasarTurnoManualmente() {
+        function guardarEstadoTurno() {
+            copiaTableroInicioTurno = JSON.parse(JSON.stringify(tableroGrupos));
+            copiaManoInicioTurno = JSON.parse(JSON.stringify(mano));
+        }
+
+        function deshacerMovimientos() {
             if (!esMiTurno) return;
-            
-            esMiTurno = false;
-            haJugadoEnTurno = false;
+            tableroGrupos = JSON.parse(JSON.stringify(copiaTableroInicioTurno));
+            mano = JSON.parse(JSON.stringify(copiaManoInicioTurno));
+            seleccionadas = [];
+            haBajadoEnEsteTurno = false;
+            document.getElementById('mensaje').textContent = "Movimientos deshechos.";
+            renderizarTablero();
+            renderizarMano();
             actualizarInterfazTurno();
-            
-            conn.send({
-                tipo: 'ACCION',
-                tablero: tableroGrupos,
-                mazo: mazo
-            });
         }
 
         function actualizarInterfazTurno() {
             const txt = document.getElementById('turno-info');
             const txtApertura = document.getElementById('estado-apertura');
-            const btnBajar = document.getElementById('btn-bajar');
+            const btnCrear = document.getElementById('btn-crear-grupo');
             const btnRobar = document.getElementById('btn-robar');
             const btnPasar = document.getElementById('btn-pasar');
+            const btnReset = document.getElementById('btn-reset');
 
             txtApertura.textContent = haAbierto 
                 ? "Apertura inicial completada" 
@@ -281,17 +310,30 @@
                 txt.textContent = "TU TURNO";
                 txt.style.color = "#4caf50";
                 
-                // Si ya jugó en este turno, solo puede seguir bajando jugadas o pasar turno
-                btnBajar.disabled = false;
-                btnRobar.disabled = haJugadoEnTurno; 
+                btnCrear.disabled = false;
+                btnRobar.disabled = haBajadoEnEsteTurno; 
                 btnPasar.disabled = false;
+                btnReset.disabled = false;
             } else {
                 txt.textContent = "Turno del Rival...";
                 txt.style.color = "#ff9800";
-                btnBajar.disabled = true;
+                btnCrear.disabled = true;
                 btnRobar.disabled = true;
                 btnPasar.disabled = true;
+                btnReset.disabled = true;
             }
+        }
+
+        function seleccionarFicha(ficha) {
+            if (!esMiTurno) return;
+            const idx = seleccionadas.findIndex(f => f.id === ficha.id);
+            if (idx > -1) {
+                seleccionadas.splice(idx, 1);
+            } else {
+                seleccionadas.push(ficha);
+            }
+            renderizarMano();
+            renderizarTablero();
         }
 
         function renderizarMano() {
@@ -302,16 +344,9 @@
             mano.forEach(ficha => {
                 const div = document.createElement('div');
                 div.className = `ficha ${ficha.color}`;
-                if (seleccionadas.includes(ficha)) div.classList.add('seleccionada');
+                if (seleccionadas.some(f => f.id === ficha.id)) div.classList.add('seleccionada');
                 div.textContent = ficha.numero;
-                
-                div.onclick = () => {
-                    if (!esMiTurno) return;
-                    const idx = seleccionadas.indexOf(ficha);
-                    if (idx > -1) seleccionadas.splice(idx, 1);
-                    else seleccionadas.push(ficha);
-                    renderizarMano();
-                };
+                div.onclick = () => seleccionarFicha(ficha);
                 soporte.appendChild(div);
             });
         }
@@ -319,27 +354,37 @@
         function renderizarTablero() {
             const tablero = document.getElementById('tablero');
             tablero.innerHTML = '';
-            tableroGrupos.forEach(grupo => {
+
+            // Limpiar grupos vacíos si los hubiera
+            tableroGrupos = tableroGrupos.filter(g => g.length > 0);
+
+            tableroGrupos.forEach((grupo, gIdx) => {
                 const contenedor = document.createElement('div');
                 contenedor.className = 'grupo-jugada';
+
                 grupo.forEach(ficha => {
                     const div = document.createElement('div');
                     div.className = `ficha ${ficha.color}`;
+                    if (seleccionadas.some(f => f.id === ficha.id)) div.classList.add('seleccionada');
                     div.textContent = ficha.numero;
+                    div.onclick = () => seleccionarFicha(ficha);
                     contenedor.appendChild(div);
                 });
+
                 tablero.appendChild(contenedor);
             });
         }
 
-        function esJugadaValida(grupo) {
+        function esGrupoValido(grupo) {
             if (grupo.length < 3) return false;
             const f = [...grupo].sort((a, b) => a.numero - b.numero);
 
+            // Trío / Cuarteto
             const mismoNumero = f.every(item => item.numero === f[0].numero);
             const coloresUnicos = new Set(f.map(item => item.color)).size === f.length;
             if (mismoNumero && coloresUnicos) return true;
 
+            // Escalera
             const mismoColor = f.every(item => item.color === f[0].color);
             let esConsecutivo = true;
             for (let i = 0; i < f.length - 1; i++) {
@@ -355,63 +400,107 @@
             return grupo.reduce((suma, ficha) => suma + ficha.numero, 0);
         }
 
-        function bajarJugada() {
-            if (!esMiTurno) return;
+        function crearNuevoGrupo() {
+            if (!esMiTurno || seleccionadas.length === 0) return;
 
             const mensaje = document.getElementById('mensaje');
 
-            if (!esJugadaValida(seleccionadas)) {
-                mensaje.textContent = "Combinación no válida (Trío o Escalera de min. 3 fichas)";
-                return;
-            }
+            // Separar las fichas seleccionadas de la mano y del tablero
+            const fichasNuevas = [...seleccionadas];
+            fichasNuevas.sort((a, b) => a.numero - b.numero);
 
-            const puntosCombinacion = calcularPuntos(seleccionadas);
+            // Quitar de la mano
+            mano = mano.filter(f => !seleccionadas.some(s => s.id === f.id));
 
-            // Verificación de la primera apertura (mínimo 30 puntos)
-            if (!haAbierto) {
-                if (puntosCombinacion < 30) {
-                    mensaje.textContent = `La apertura inicial requiere al menos 30 puntos (Tu selección suma ${puntosCombinacion})`;
-                    return;
-                } else {
-                    haAbierto = true; // Superada la primera apertura
-                }
-            }
+            // Quitar de los grupos existentes del tablero
+            tableroGrupos = tableroGrupos.map(g => g.filter(f => !seleccionadas.some(s => s.id === f.id)));
 
-            // Aplicar jugada
-            seleccionadas.sort((a, b) => a.numero - b.numero);
-            tableroGrupos.push([...seleccionadas]);
+            // Añadir el nuevo grupo al tablero
+            tableroGrupos.push(fichasNuevas);
 
-            mano = mano.filter(f => !seleccionadas.includes(f));
             seleccionadas = [];
-            haJugadoEnTurno = true; // Ya ha bajado al menos una jugada en este turno
-
-            mensaje.textContent = `¡Combinación bajada! (${puntosCombinacion} pts)`;
+            haBajadoEnEsteTurno = true;
+            mensaje.textContent = "Grupo creado o modificado en la mesa.";
 
             renderizarTablero();
             renderizarMano();
             actualizarInterfazTurno();
+        }
 
-            if (mano.length === 0) {
-                alert("¡HAS GANADO LA PARTIDA!");
-                pasarTurnoManualmente();
+        function finalizarTurno() {
+            if (!esMiTurno) return;
+            const mensaje = document.getElementById('mensaje');
+
+            // 1. Limpiar grupos vacíos
+            tableroGrupos = tableroGrupos.filter(g => g.length > 0);
+
+            // 2. Comprobar que TODOS los grupos del tablero sean válidos
+            const todosValidos = tableroGrupos.every(g => esGrupoValido(g));
+
+            if (!todosValidos) {
+                mensaje.textContent = "¡Movimiento inválido! Todos los grupos de la mesa deben tener al menos 3 fichas formando trío o escalera.";
+                return;
             }
+
+            // 3. Comprobar Apertura de 30 puntos si no ha abierto antes
+            if (!haAbierto) {
+                // Calcular puntos de fichas nuevas bajadas desde la mano
+                const fichasEnMesa = tableroGrupos.flat();
+                const fichasNuevasDesdeMano = fichasEnMesa.filter(f => !copiaManoInicioTurno.some(m => m.id === f.id));
+                const puntosApertura = calcularPuntos(fichasNuevasDesdeMano);
+
+                if (puntosApertura < 30 || fichasNuevasDesdeMano.length === 0) {
+                    mensaje.textContent = `Para la apertura inicial debes bajar fichas de tu mano que sumen al menos 30 puntos (Suma actual: ${puntosApertura} pts).`;
+                    return;
+                } else {
+                    haAbierto = true;
+                }
+            }
+
+            // 4. Comprobar CONDICIÓN DE VICTORIA (se queda sin fichas)
+            const victoria = mano.length === 0;
+
+            if (victoria) {
+                alert("¡ENHORABUENA, HAS GANADO LA PARTIDA!");
+            }
+
+            // 5. Enviar actualización al rival y pasar turno
+            esMiTurno = false;
+            haBajadoEnEsteTurno = false;
+            seleccionadas = [];
+            actualizarInterfazTurno();
+
+            conn.send({
+                tipo: 'ACCION',
+                tablero: tableroGrupos,
+                mazo: mazo,
+                victoriaRival: victoria
+            });
         }
 
         function robarFicha() {
-            if (!esMiTurno || haJugadoEnTurno) return;
-            
+            if (!esMiTurno || haBajadoEnEsteTurno) return;
+
             if (mazo.length > 0) {
                 mano.push(mazo.pop());
-                document.getElementById('mensaje').textContent = "Has robado una ficha. Turno pasado al rival.";
+                document.getElementById('mensaje').textContent = "Has robado una ficha.";
             } else {
                 document.getElementById('mensaje').textContent = "No quedan fichas en el mazo.";
             }
 
-            seleccionadas = [];
-            renderizarMano();
-            
-            // Al robar ficha se pasa automáticamente el turno
-            pasarTurnoManualmente();
+            // Deshacer cualquier movimiento incompleto al robar
+            deshacerMovimientos();
+
+            // Pasar turno automáticamente
+            esMiTurno = false;
+            actualizarInterfazTurno();
+
+            conn.send({
+                tipo: 'ACCION',
+                tablero: tableroGrupos,
+                mazo: mazo,
+                victoriaRival: false
+            });
         }
 
         iniciarPeer();
