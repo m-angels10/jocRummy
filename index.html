@@ -156,7 +156,7 @@
 
     <div class="controles">
         <button id="btn-crear-grupo" onclick="crearNuevoGrupo()" disabled>Crear Grupo de Fichas</button>
-        <button id="btn-robar" class="rob" onclick="robarFicha()" disabled>Robar y Pasar</button>
+        <button id="btn-robar" class="rob" onclick="robarFicha()" disabled>Robar Ficha</button>
         <button id="btn-pasar" class="pasar" onclick="finalizarTurno()" disabled>Finalizar Turno</button>
         <button id="btn-reset" class="reset" onclick="deshacerMovimientos()" disabled>Deshacer Movimientos</button>
     </div>
@@ -171,7 +171,6 @@
         let esMiTurno = false;
         let soyHost = false;
 
-        // Copias de respaldo para deshacer cambios si el movimiento es inválido
         let copiaTableroInicioTurno = [];
         let copiaManoInicioTurno = [];
         
@@ -355,10 +354,9 @@
             const tablero = document.getElementById('tablero');
             tablero.innerHTML = '';
 
-            // Limpiar grupos vacíos si los hubiera
             tableroGrupos = tableroGrupos.filter(g => g.length > 0);
 
-            tableroGrupos.forEach((grupo, gIdx) => {
+            tableroGrupos.forEach((grupo) => {
                 const contenedor = document.createElement('div');
                 contenedor.className = 'grupo-jugada';
 
@@ -379,12 +377,10 @@
             if (grupo.length < 3) return false;
             const f = [...grupo].sort((a, b) => a.numero - b.numero);
 
-            // Trío / Cuarteto
             const mismoNumero = f.every(item => item.numero === f[0].numero);
             const coloresUnicos = new Set(f.map(item => item.color)).size === f.length;
             if (mismoNumero && coloresUnicos) return true;
 
-            // Escalera
             const mismoColor = f.every(item => item.color === f[0].color);
             let esConsecutivo = true;
             for (let i = 0; i < f.length - 1; i++) {
@@ -405,17 +401,12 @@
 
             const mensaje = document.getElementById('mensaje');
 
-            // Separar las fichas seleccionadas de la mano y del tablero
             const fichasNuevas = [...seleccionadas];
             fichasNuevas.sort((a, b) => a.numero - b.numero);
 
-            // Quitar de la mano
             mano = mano.filter(f => !seleccionadas.some(s => s.id === f.id));
-
-            // Quitar de los grupos existentes del tablero
             tableroGrupos = tableroGrupos.map(g => g.filter(f => !seleccionadas.some(s => s.id === f.id)));
 
-            // Añadir el nuevo grupo al tablero
             tableroGrupos.push(fichasNuevas);
 
             seleccionadas = [];
@@ -431,10 +422,8 @@
             if (!esMiTurno) return;
             const mensaje = document.getElementById('mensaje');
 
-            // 1. Limpiar grupos vacíos
             tableroGrupos = tableroGrupos.filter(g => g.length > 0);
 
-            // 2. Comprobar que TODOS los grupos del tablero sean válidos
             const todosValidos = tableroGrupos.every(g => esGrupoValido(g));
 
             if (!todosValidos) {
@@ -442,9 +431,7 @@
                 return;
             }
 
-            // 3. Comprobar Apertura de 30 puntos si no ha abierto antes
             if (!haAbierto) {
-                // Calcular puntos de fichas nuevas bajadas desde la mano
                 const fichasEnMesa = tableroGrupos.flat();
                 const fichasNuevasDesdeMano = fichasEnMesa.filter(f => !copiaManoInicioTurno.some(m => m.id === f.id));
                 const puntosApertura = calcularPuntos(fichasNuevasDesdeMano);
@@ -457,14 +444,12 @@
                 }
             }
 
-            // 4. Comprobar CONDICIÓN DE VICTORIA (se queda sin fichas)
             const victoria = mano.length === 0;
 
             if (victoria) {
                 alert("¡ENHORABUENA, HAS GANADO LA PARTIDA!");
             }
 
-            // 5. Enviar actualización al rival y pasar turno
             esMiTurno = false;
             haBajadoEnEsteTurno = false;
             seleccionadas = [];
@@ -482,17 +467,18 @@
             if (!esMiTurno || haBajadoEnEsteTurno) return;
 
             if (mazo.length > 0) {
-                mano.push(mazo.pop());
-                document.getElementById('mensaje').textContent = "Has robado una ficha.";
+                const nuevaFicha = mazo.pop();
+                mano.push(nuevaFicha);
+                document.getElementById('mensaje').textContent = "Has robado una ficha. Turno pasado al rival.";
             } else {
                 document.getElementById('mensaje').textContent = "No quedan fichas en el mazo.";
             }
 
-            // Deshacer cualquier movimiento incompleto al robar
-            deshacerMovimientos();
+            seleccionadas = [];
+            renderizarMano();
 
-            // Pasar turno automáticamente
             esMiTurno = false;
+            haBajadoEnEsteTurno = false;
             actualizarInterfazTurno();
 
             conn.send({
