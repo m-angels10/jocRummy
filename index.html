@@ -1,15 +1,9 @@
-Aquí tienes el código completo y corregido en un único archivo `index.html`.
-
-Incluye la llamada a `renderizarMano()` en el anfitrión para que **ambos jugadores vean sus 14 fichas** desde el primer segundo.
-
-```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Rummy Online 2 Jugadores</title>
-    <!-- Librería PeerJS para conexión directa entre dos móviles/navegadores -->
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         * { box-sizing: border-box; }
@@ -28,7 +22,6 @@ Incluye la llamada a `renderizarMano()` en el anfitrión para que **ambos jugado
 
         h1 { margin: 5px 0; font-size: 1.4rem; }
 
-        /* Panel de Conexión Online */
         #panel-conexion {
             background: #14281f;
             padding: 15px;
@@ -49,7 +42,6 @@ Incluye la llamada a `renderizarMano()` en el anfitrión para que **ambos jugado
             text-align: center;
         }
 
-        /* Tablero de juego */
         #tablero {
             width: 100%;
             max-width: 600px;
@@ -70,7 +62,6 @@ Incluye la llamada a `renderizarMano()` en el anfitrión para que **ambos jugado
             margin: 5px;
         }
 
-        /* Soporte del jugador */
         #soporte {
             width: 100%;
             max-width: 600px;
@@ -136,7 +127,6 @@ Incluye la llamada a `renderizarMano()` en el anfitrión para que **ambos jugado
 
     <h1>Rummy Online 2P</h1>
 
-    <!-- Conexión -->
     <div id="panel-conexion">
         <div>Tu ID de Sala: <b id="mi-id">Generando...</b></div>
         <div style="margin-top: 8px;">
@@ -165,7 +155,6 @@ Incluye la llamada a `renderizarMano()` en el anfitrión para que **ambos jugado
         let esMiTurno = false;
         let soyHost = false;
 
-        // --- CONEXIÓN ONLINE (PeerJS) ---
         function iniciarPeer() {
             const idCorto = Math.floor(1000 + Math.random() * 9000).toString();
             peer = new Peer(idCorto);
@@ -174,13 +163,16 @@ Incluye la llamada a `renderizarMano()` en el anfitrión para que **ambos jugado
                 document.getElementById('mi-id').textContent = id;
             });
 
-            // Escuchar cuando el Jugador 2 se conecta al Jugador 1
             peer.on('connection', c => {
                 conn = c;
                 soyHost = true;
                 esMiTurno = true;
-                configurarConexion();
-                iniciarPartidaHost();
+                
+                // Esperar confirmación de canal abierto antes de iniciar
+                conn.on('open', () => {
+                    configurarConexion();
+                    iniciarPartidaHost();
+                });
             });
         }
 
@@ -190,7 +182,10 @@ Incluye la llamada a `renderizarMano()` en el anfitrión para que **ambos jugado
             conn = peer.connect(idRival);
             soyHost = false;
             esMiTurno = false;
-            configurarConexion();
+
+            conn.on('open', () => {
+                configurarConexion();
+            });
         }
 
         function configurarConexion() {
@@ -202,7 +197,6 @@ Incluye la llamada a `renderizarMano()` en el anfitrión para que **ambos jugado
             });
         }
 
-        // --- LÓGICA DEL JUEGO ---
         function crearMazo() {
             mazo = [];
             for (let i = 0; i < 2; i++) {
@@ -218,33 +212,30 @@ Incluye la llamada a `renderizarMano()` en el anfitrión para que **ambos jugado
         function iniciarPartidaHost() {
             crearMazo();
             
-            // 1. Repartir 14 fichas al Anfitrión (Jugador 1)
             mano = mazo.splice(0, 14);
-            
-            // 2. Repartir 14 fichas al Invitado (Jugador 2)
             const manoRival = mazo.splice(0, 14);
 
-            // 3. Dibujar la mano del Anfitrión en su pantalla
-            renderizarMano();
+            // Asegura el renderizado local del Host
+            setTimeout(() => {
+                renderizarMano();
+                actualizarInterfazTurno();
+            }, 100);
 
-            // 4. Enviar la mano inicial al Jugador 2
             conn.send({ 
                 tipo: 'INICIO', 
                 manoRival: manoRival 
             });
-            
-            actualizarInterfazTurno();
         }
 
         function procesarDatos(data) {
             if (data.tipo === 'INICIO') {
-                // El Jugador 2 recibe sus fichas iniciales
                 mano = data.manoRival;
                 seleccionadas = [];
-                renderizarMano();
-                actualizarInterfazTurno();
+                setTimeout(() => {
+                    renderizarMano();
+                    actualizarInterfazTurno();
+                }, 100);
             } else if (data.tipo === 'ACCION') {
-                // Sincronizar mesa y mazo cuando el rival acaba su turno
                 tableroGrupos = data.tablero;
                 mazo = data.mazo;
                 esMiTurno = true;
@@ -323,12 +314,10 @@ Incluye la llamada a `renderizarMano()` en el anfitrión para que **ambos jugado
             if (grupo.length < 3) return false;
             const f = [...grupo].sort((a, b) => a.numero - b.numero);
 
-            // Trío o Cuarteto (Mismo número, distinto color)
             const mismoNumero = f.every(item => item.numero === f[0].numero);
             const coloresUnicos = new Set(f.map(item => item.color)).size === f.length;
             if (mismoNumero && coloresUnicos) return true;
 
-            // Escalera (Mismo color, números consecutivos)
             const mismoColor = f.every(item => item.color === f[0].color);
             let esConsecutivo = true;
             for (let i = 0; i < f.length - 1; i++) {
@@ -346,7 +335,6 @@ Incluye la llamada a `renderizarMano()` en el anfitrión para que **ambos jugado
                 seleccionadas.sort((a, b) => a.numero - b.numero);
                 tableroGrupos.push([...seleccionadas]);
 
-                // Retirar las fichas jugadas del soporte
                 mano = mano.filter(f => !seleccionadas.includes(f));
                 seleccionadas = [];
 
@@ -357,7 +345,7 @@ Incluye la llamada a `renderizarMano()` en el anfitrión para que **ambos jugado
                     alert("¡HAS GANADO LA PARTIDA!");
                 }
             } else {
-                document.getElementById('mensaje').textContent = "Combinación no válida (Trío o Escalera de min. 3 fichas)";
+                document.getElementById('mensaje').textContent = "Combinación no válida";
             }
         }
 
@@ -371,10 +359,7 @@ Incluye la llamada a `renderizarMano()` en el anfitrión para que **ambos jugado
             pasarTurno();
         }
 
-        // Inicializar la conexión P2P
         iniciarPeer();
     </script>
 </body>
 </html>
-
-```
